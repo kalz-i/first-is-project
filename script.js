@@ -1,0 +1,475 @@
+/* script.js */
+// Auth & toggle logic for landing page
+const container = document.querySelector('.container');
+const registerBtn = document.querySelector('.register-btn');
+const loginBtn = document.querySelector('.login-btn');
+
+if (container && registerBtn && loginBtn) {
+  registerBtn.addEventListener('click', () => {
+    container.classList.add('active');
+  });
+
+  loginBtn.addEventListener('click', () => {
+    container.classList.remove('active');
+  });
+
+  const loginForm = document.querySelector('.login-form');
+  const registerForm = document.querySelector('.register-form');
+
+  const STORAGE_KEY = 'credxUsers';
+  const DEFAULT_USER = { username: 'CredX', password: 'credxteam' };
+
+  const loadUsers = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const saveUsers = (users) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  };
+
+  const findUser = (username, password) => {
+    if (username === DEFAULT_USER.username && password === DEFAULT_USER.password) {
+      return DEFAULT_USER;
+    }
+    const users = loadUsers();
+    return users.find((u) => u.username === username && u.password === password);
+  };
+
+  const isValidGmail = (email) => /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(email);
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername')?.value.trim();
+      const password = document.getElementById('loginPassword')?.value;
+
+      if (findUser(username, password)) {
+        window.location.href = 'card.html';
+      } else {
+        alert('Invalid credentials.');
+      }
+    });
+  }
+
+  if (registerForm) {
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('registerUsername')?.value.trim();
+      const email = document.getElementById('registerEmail')?.value.trim();
+      const password = document.getElementById('registerPassword')?.value;
+
+      if (!username || !email || !password) {
+        alert('Please fill out username, Gmail, and password.');
+        return;
+      }
+
+      if (!isValidGmail(email)) {
+        alert('Please enter a valid Gmail address (example@gmail.com).');
+        return;
+      }
+
+      const users = loadUsers();
+      const exists = users.some((u) => u.username === username || u.email === email);
+      if (exists) {
+        alert('That username or Gmail is already registered. Please log in.');
+        return;
+      }
+
+      const newUser = { username, email, password };
+      users.push(newUser);
+      saveUsers(users);
+      alert(`Welcome to CredX, ${username}!`);
+
+      window.location.href = 'card.html';
+    });
+  }
+}
+
+/* card.js */
+(function() {
+  'use strict';
+
+  // State management
+  const state = {
+    currentCardBackground: Math.floor(Math.random() * 25 + 1),
+    cardName: "",
+    cardNumber: "",
+    cardMonth: "",
+    cardYear: "",
+    cardCvv: "",
+    minCardYear: new Date().getFullYear(),
+    amexCardMask: "#### ###### #####",
+    otherCardMask: "#### #### #### ####",
+    isCardFlipped: false,
+    focusElementStyle: null,
+    isInputFocused: false
+  };
+
+  // DOM elements
+  const elements = {
+    cardItem: null,
+    cardNumberInput: null,
+    cardNameInput: null,
+    cardMonthSelect: null,
+    cardYearSelect: null,
+    cardCvvInput: null,
+    focusElement: null,
+    cardNumberDisplay: null,
+    cardNameDisplay: null,
+    cardMonthDisplay: null,
+    cardYearDisplay: null,
+    cardCvvDisplay: null,
+    cardTypeImg: null,
+    cardTypeImgBack: null,
+    cardBgFront: null,
+    cardBgBack: null
+  };
+
+  // Initialize DOM references
+  function initElements() {
+    elements.cardItem = document.querySelector('.card-item');
+    elements.cardNumberInput = document.getElementById('cardNumber');
+    elements.cardNameInput = document.getElementById('cardName');
+    elements.cardMonthSelect = document.getElementById('cardMonth');
+    elements.cardYearSelect = document.getElementById('cardYear');
+    elements.cardCvvInput = document.getElementById('cardCvv');
+    elements.focusElement = document.querySelector('.card-item__focus');
+    elements.cardNumberDisplay = document.querySelector('.card-item__number');
+    elements.cardNameDisplay = document.querySelector('.card-item__name');
+    elements.cardMonthDisplay = document.querySelector('.card-item__dateItem:first-of-type span');
+    elements.cardYearDisplay = document.querySelector('.card-item__dateItem:last-of-type span');
+    elements.cardCvvDisplay = document.getElementById('cardCvvDisplay');
+    elements.cardTypeImg = document.querySelector('.card-item__side.-front .card-item__typeImg');
+    elements.cardTypeImgBack = document.querySelector('.card-item__side.-back .card-item__typeImg');
+    elements.cardBgFront = document.querySelector('.card-item__side.-front .card-item__bg');
+    elements.cardBgBack = document.querySelector('.card-item__side.-back .card-item__bg');
+  }
+
+  // Get card type based on card number
+  function getCardType(number) {
+    if (!number) return "visa";
+    
+    if (/^4/.test(number)) return "visa";
+    if (/^(34|37)/.test(number)) return "amex";
+    if (/^5[1-5]/.test(number)) return "mastercard";
+    if (/^6011/.test(number)) return "discover";
+    if (/^9792/.test(number)) return "troy";
+    
+    return "visa"; // default type
+  }
+
+  // Generate card number mask based on card type
+  function generateCardNumberMask() {
+    const cardType = getCardType(state.cardNumber);
+    return cardType === "amex" ? state.amexCardMask : state.otherCardMask;
+  }
+
+  // Get minimum card month
+  function getMinCardMonth() {
+    if (state.cardYear === state.minCardYear) {
+      return new Date().getMonth() + 1;
+    }
+    return 1;
+  }
+
+  // Format card number with mask
+  function formatCardNumber(value, mask) {
+    const numbers = value.replace(/\D/g, '');
+    let formatted = '';
+    let numberIndex = 0;
+    
+    for (let i = 0; i < mask.length && numberIndex < numbers.length; i++) {
+      if (mask[i] === '#') {
+        formatted += numbers[numberIndex];
+        numberIndex++;
+      } else {
+        formatted += mask[i];
+      }
+    }
+    
+    return formatted;
+  }
+
+  // Update card number display
+  function updateCardNumberDisplay() {
+    const mask = generateCardNumberMask();
+    const cardType = getCardType(state.cardNumber);
+    const numbers = state.cardNumber.replace(/\D/g, '');
+    
+    let html = '';
+    for (let i = 0; i < mask.length; i++) {
+      const char = mask[i];
+      const isSpace = char.trim() === '';
+      const hasValue = i < numbers.length;
+      
+      if (cardType === 'amex' && i > 4 && i < 14 && hasValue && !isSpace) {
+        // Mask middle digits for Amex
+        html += `<div class="card-item__numberItem">*</div>`;
+      } else if (cardType !== 'amex' && i > 4 && i < 15 && hasValue && !isSpace) {
+        // Mask middle digits for other cards
+        html += `<div class="card-item__numberItem">*</div>`;
+      } else if (hasValue) {
+        html += `<div class="card-item__numberItem ${isSpace ? '-active' : ''}">${numbers[i]}</div>`;
+      } else {
+        html += `<div class="card-item__numberItem ${isSpace ? '-active' : ''}">${char}</div>`;
+      }
+    }
+    
+    elements.cardNumberDisplay.innerHTML = html;
+  }
+
+  // Update card name display
+  function updateCardNameDisplay() {
+    if (state.cardName.length) {
+      const name = state.cardName.replace(/\s\s+/g, ' ');
+      let html = '';
+      for (let i = 0; i < name.length; i++) {
+        html += `<span class="card-item__nameItem">${name[i]}</span>`;
+      }
+      elements.cardNameDisplay.innerHTML = html;
+    } else {
+      elements.cardNameDisplay.textContent = 'Full Name';
+    }
+  }
+
+  // Update card date display
+  function updateCardDateDisplay() {
+    if (elements.cardMonthDisplay) {
+      elements.cardMonthDisplay.textContent = state.cardMonth || 'MM';
+    }
+    if (elements.cardYearDisplay) {
+      elements.cardYearDisplay.textContent = state.cardYear ? String(state.cardYear).slice(2, 4) : 'YY';
+    }
+  }
+
+  // Update card CVV display
+  function updateCardCvvDisplay() {
+    if (elements.cardCvvDisplay) {
+      let html = '';
+      for (let i = 0; i < state.cardCvv.length; i++) {
+        html += '<span>*</span>';
+      }
+      elements.cardCvvDisplay.innerHTML = html;
+    }
+  }
+
+  // Update card type image
+  function updateCardType() {
+    const cardType = getCardType(state.cardNumber);
+    if (elements.cardTypeImg) {
+      elements.cardTypeImg.src = `./assets/images/${cardType}.png`;
+      elements.cardTypeImg.alt = cardType;
+    }
+    if (elements.cardTypeImgBack) {
+      elements.cardTypeImgBack.src = `./assets/images/${cardType}.png`;
+      elements.cardTypeImgBack.alt = cardType;
+    }
+  }
+
+  // Update card background
+  function updateCardBackground() {
+    if (elements.cardBgFront) {
+      elements.cardBgFront.src = `./assets/images/${state.currentCardBackground}.jpeg`;
+    }
+    if (elements.cardBgBack) {
+      elements.cardBgBack.src = `./assets/images/${state.currentCardBackground}.jpeg`;
+    }
+  }
+
+  // Flip card
+  function flipCard(status) {
+    state.isCardFlipped = status;
+    if (elements.cardItem) {
+      if (status) {
+        elements.cardItem.classList.add('-active');
+      } else {
+        elements.cardItem.classList.remove('-active');
+      }
+    }
+  }
+
+  // Focus input handler
+  function focusInput(e) {
+    state.isInputFocused = true;
+    const targetRef = e.target.dataset.ref;
+    let target = null;
+    
+    // Find target element by ref attribute
+    if (targetRef === 'cardNumber') {
+      target = document.querySelector('label[for="cardNumber"]');
+    } else if (targetRef === 'cardName') {
+      target = document.querySelector('label[for="cardName"]');
+    } else if (targetRef === 'cardDate') {
+      target = document.querySelector('.card-item__date');
+    }
+    
+    if (target && elements.focusElement && elements.cardItem) {
+      const rect = target.getBoundingClientRect();
+      const cardRect = elements.cardItem.getBoundingClientRect();
+      
+      state.focusElementStyle = {
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        transform: `translateX(${rect.left - cardRect.left}px) translateY(${rect.top - cardRect.top}px)`
+      };
+      
+      elements.focusElement.style.width = state.focusElementStyle.width;
+      elements.focusElement.style.height = state.focusElementStyle.height;
+      elements.focusElement.style.transform = state.focusElementStyle.transform;
+      elements.focusElement.classList.add('-active');
+    }
+  }
+
+  // Blur input handler
+  function blurInput() {
+    state.isInputFocused = false;
+    setTimeout(() => {
+      if (!state.isInputFocused && elements.focusElement) {
+        elements.focusElement.classList.remove('-active');
+        state.focusElementStyle = null;
+      }
+    }, 300);
+  }
+
+  // Input mask handler
+  function applyMask(input, mask) {
+    const value = input.value.replace(/\D/g, '');
+    const formatted = formatCardNumber(value, mask);
+    input.value = formatted;
+    return value;
+  }
+
+  // Initialize month options
+  function initMonthOptions() {
+    if (!elements.cardMonthSelect) return;
+    
+    const currentMonth = new Date().getMonth() + 1;
+    const minMonth = state.cardYear === state.minCardYear ? currentMonth : 1;
+    
+    elements.cardMonthSelect.innerHTML = '<option value="" disabled selected>Month</option>';
+    for (let i = 1; i <= 12; i++) {
+      const option = document.createElement('option');
+      option.value = i < 10 ? '0' + i : String(i);
+      option.textContent = i < 10 ? '0' + i : String(i);
+      option.disabled = i < minMonth;
+      elements.cardMonthSelect.appendChild(option);
+    }
+  }
+
+  // Initialize year options
+  function initYearOptions() {
+    if (!elements.cardYearSelect) return;
+    
+    elements.cardYearSelect.innerHTML = '<option value="" disabled selected>Year</option>';
+    for (let i = 0; i < 12; i++) {
+      const option = document.createElement('option');
+      const year = state.minCardYear + i;
+      option.value = year;
+      option.textContent = year;
+      elements.cardYearSelect.appendChild(option);
+    }
+  }
+
+  // Event listeners
+  function setupEventListeners() {
+    // Card number input
+    if (elements.cardNumberInput) {
+      elements.cardNumberInput.addEventListener('input', (e) => {
+        const mask = generateCardNumberMask();
+        const value = applyMask(e.target, mask);
+        state.cardNumber = value;
+        updateCardNumberDisplay();
+        updateCardType();
+      });
+      
+      elements.cardNumberInput.addEventListener('focus', focusInput);
+      elements.cardNumberInput.addEventListener('blur', blurInput);
+    }
+
+    // Card name input
+    if (elements.cardNameInput) {
+      elements.cardNameInput.addEventListener('input', (e) => {
+        state.cardName = e.target.value;
+        updateCardNameDisplay();
+      });
+      
+      elements.cardNameInput.addEventListener('focus', focusInput);
+      elements.cardNameInput.addEventListener('blur', blurInput);
+    }
+
+    // Card month select
+    if (elements.cardMonthSelect) {
+      elements.cardMonthSelect.addEventListener('change', (e) => {
+        state.cardMonth = e.target.value;
+        updateCardDateDisplay();
+      });
+      
+      elements.cardMonthSelect.addEventListener('focus', focusInput);
+      elements.cardMonthSelect.addEventListener('blur', blurInput);
+    }
+
+    // Card year select
+    if (elements.cardYearSelect) {
+      elements.cardYearSelect.addEventListener('change', (e) => {
+        state.cardYear = e.target.value;
+        if (state.cardMonth && parseInt(state.cardMonth) < getMinCardMonth()) {
+          state.cardMonth = '';
+          elements.cardMonthSelect.value = '';
+        }
+        initMonthOptions();
+        updateCardDateDisplay();
+      });
+      
+      elements.cardYearSelect.addEventListener('focus', focusInput);
+      elements.cardYearSelect.addEventListener('blur', blurInput);
+    }
+
+    // Card CVV input
+    if (elements.cardCvvInput) {
+      elements.cardCvvInput.addEventListener('input', (e) => {
+        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+        e.target.value = value;
+        state.cardCvv = value;
+        updateCardCvvDisplay();
+      });
+      
+      elements.cardCvvInput.addEventListener('focus', () => {
+        flipCard(true);
+      });
+      
+      elements.cardCvvInput.addEventListener('blur', () => {
+        flipCard(false);
+      });
+    }
+  }
+
+  // Initialize application
+  function init() {
+    initElements();
+    initMonthOptions();
+    initYearOptions();
+    setupEventListeners();
+    updateCardBackground();
+    updateCardNumberDisplay();
+    updateCardNameDisplay();
+    updateCardDateDisplay();
+    updateCardType();
+    
+    // Focus card number input on load
+    if (elements.cardNumberInput) {
+      elements.cardNumberInput.focus();
+    }
+  }
+
+  // Run when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
