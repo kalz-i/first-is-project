@@ -12,6 +12,8 @@ const setHasCard = (value) => localStorage.setItem(getCardKey(), value ? 'true' 
 const hasCard = () => localStorage.getItem(getCardKey()) === 'true';
 const setCurrentUser = (username) => localStorage.setItem(CURRENT_USER_KEY, username || '');
 
+/* loginregister.html js */
+
 // Auth & toggle logic for landing page
 const container = document.querySelector('.container');
 const registerBtn = document.querySelector('.register-btn');
@@ -75,7 +77,7 @@ if (container && registerBtn && loginBtn) {
       if (findUser(username, password)) {
         if (loginError) loginError.textContent = '';
         setCurrentUser(username);
-        window.location.href = 'card.html';
+        window.location.href = 'index.html';
       } else {
         if (loginError) {
           loginError.textContent = 'Invalid username or password';
@@ -132,12 +134,12 @@ if (container && registerBtn && loginBtn) {
       setHasCard(false);
       
       if (registerError) registerError.textContent = '';
-      window.location.href = 'card.html';
+      window.location.href = 'index.html';
     });
   }
 }
 
-/* card.js */
+/* card.html js */
 (function() {
   'use strict';
 
@@ -543,5 +545,222 @@ if (container && registerBtn && loginBtn) {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+})();
+
+/* index.html js (homepage) */
+(function() {
+  'use strict';
+  
+  function initHomepage() {
+    const currentUser = localStorage.getItem('credxCurrentUser');
+    const authButtons = document.getElementById('auth-buttons');
+    const userInfo = document.getElementById('user-info');
+    const usernameDisplay = document.getElementById('username-display');
+    const logoutBtn = document.getElementById('logout-btn');
+    const welcomeMessage = document.getElementById('welcome-message');
+    
+    // Show/hide login buttons or user info based on login status
+    if (currentUser) {
+      // User is logged in
+      if (authButtons) authButtons.style.display = 'none';
+      if (userInfo) userInfo.style.display = 'flex';
+      if (usernameDisplay) usernameDisplay.textContent = currentUser;
+      if (welcomeMessage) {
+        welcomeMessage.innerHTML = `<p>Welcome, <strong>${currentUser}</strong>!</p>`;
+      }
+    } else {
+      // User is not logged in
+      if (authButtons) authButtons.style.display = 'flex';
+      if (userInfo) userInfo.style.display = 'none';
+    }
+    
+    // Logout functionality
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('credxCurrentUser');
+        window.location.href = 'index.html';
+      });
+    }
+
+    // Scroll animation observer
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all scroll-animate elements
+    document.querySelectorAll('.scroll-animate').forEach(el => {
+      observer.observe(el);
+    });
+
+    // Back to top button functionality
+    const backToTopButton = document.getElementById('backToTop');
+    if (backToTopButton) {
+      window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.add('show');
+        } else {
+          backToTopButton.classList.remove('show');
+        }
+      });
+      
+      backToTopButton.addEventListener('click', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+    }
+  }
+
+  // Run when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHomepage);
+  } else {
+    initHomepage();
+  }
+})();
+
+/* order.html js */
+(function() {
+  'use strict';
+  
+  function initOrder() {
+    const form = document.getElementById('orderForm');
+    const summary = document.getElementById('orderSummary');
+    const backHome = document.getElementById('backHome');
+    const button = document.querySelector('.truck-button');
+
+    const validate = () => {
+      if (!form) return false;
+      const fullName = form.fullName.value.trim();
+      const phone = form.phone.value.trim();
+      const address = form.address.value.trim();
+      const city = form.city.value.trim();
+      const zip = form.zip.value.trim();
+
+      if (!fullName || !phone || !address || !city || !zip) {
+        alert('Please fill in all delivery fields first.');
+        return false;
+      }
+
+      if (phone.replace(/\D/g, '').length < 7) {
+        alert('Please enter a valid phone number.');
+        return false;
+      }
+
+      return { fullName, phone, address, city, zip };
+    };
+
+    const runAnimation = () => {
+      if (!button) return;
+      const box = button.querySelector('.box');
+      const truck = button.querySelector('.truck');
+
+      if (button.classList.contains('done') || button.classList.contains('animation')) return;
+
+      button.classList.add('animation');
+
+      if (typeof gsap !== 'undefined') {
+        gsap.to(button, {
+          '--box-s': 1,
+          '--box-o': 1,
+          duration: .3,
+          delay: .5
+        });
+
+        gsap.to(box, {
+          x: 0,
+          duration: .4,
+          delay: .7
+        });
+
+        gsap.to(button, {
+          '--hx': -5,
+          '--bx': 50,
+          duration: .18,
+          delay: .92
+        });
+
+        gsap.to(box, {
+          y: 0,
+          duration: .1,
+          delay: 1.15
+        });
+
+        gsap.set(button, {
+          '--truck-y': 0,
+          '--truck-y-n': -26
+        });
+
+        gsap.to(button, {
+          '--truck-y': 1,
+          '--truck-y-n': -25,
+          duration: .2,
+          delay: 1.25,
+          onComplete() {
+            gsap.timeline({
+              onComplete() {
+                button.classList.add('done');
+              }
+            }).to(truck, {
+              x: 0,
+              duration: .4
+            }).to(truck, {
+              x: 40,
+              duration: 1
+            }).to(truck, {
+              x: 20,
+              duration: .6
+            }).to(truck, {
+              x: 96,
+              duration: .4
+            });
+            gsap.to(button, {
+              '--progress': 1,
+              duration: 2.4,
+              ease: "power2.in"
+            });
+          }
+        });
+      }
+    };
+
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = validate();
+        if (!data) return;
+
+        runAnimation();
+
+        if (summary) {
+          summary.classList.remove('hidden');
+          summary.textContent = `Deliver to ${data.fullName} at ${data.address}, ${data.city} ${data.zip}. Phone: ${data.phone}.`;
+        }
+      });
+    }
+
+    if (backHome) {
+      backHome.addEventListener('click', () => {
+        window.location.href = 'card.html';
+      });
+    }
+  }
+
+  // Run when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOrder);
+  } else {
+    initOrder();
   }
 })();
