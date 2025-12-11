@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css?family=Source+Code+Pro:400,500,600,700|Source+Sans+Pro:400,600,700&display=swap");
 body {
-  background: linear-gradient(135deg, rgb(255, 255, 255) 0%, #ffffff 100%);
+  background: linear-gradient(90deg, #efd5ff, #b5a8ff, #515ada);
   font-family: "Source Sans Pro", sans-serif;
   font-size: 16px;
   min-height: 100vh;

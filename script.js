@@ -332,7 +332,7 @@ if (container && registerBtn && loginBtn) {
     if (elements.cardCvvDisplay) {
       let html = '';
       for (let i = 0; i < state.cardCvv.length; i++) {
-        html += '<span>*</span>';
+        html += `<span>${state.cardCvv[i]}</span>`;
       }
       elements.cardCvvDisplay.innerHTML = html;
     }
@@ -525,7 +525,7 @@ if (container && registerBtn && loginBtn) {
     // Card CVV input
     if (elements.cardCvvInput) {
       elements.cardCvvInput.addEventListener('input', (e) => {
-        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+        const value = e.target.value.replace(/\D/g, '').slice(0, 3);
         e.target.value = value;
         state.cardCvv = value;
         updateCardCvvDisplay();
@@ -900,7 +900,7 @@ if (container && registerBtn && loginBtn) {
 
     if (backHome) {
       backHome.addEventListener('click', () => {
-        window.location.href = 'card.html';
+        window.location.href = 'index.html';
       });
     }
   }

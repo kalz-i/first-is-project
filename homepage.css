@@ -10,7 +10,7 @@ html, body {
 }
 
 body {
-    background: #ffffff;
+    background: linear-gradient(90deg, #efd5ff, #b5a8ff, #515ada);
     display: flex;
     flex-direction: column;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -72,18 +72,18 @@ nav {
 }
 
 .logout-btn:hover {
-    background: rgb(240, 240, 229);
-    color: black;
+    background: rgba(212, 197, 240, 0.5);
+    color: #5a4a6a;
 }
 
 .login-btn:hover {
-    background: rgb(240, 240, 229);
-    color: black;
+    background: rgba(212, 197, 240, 0.5);
+    color: #5a4a6a;
 }
 
 .register:hover {
-    background: rgb(240, 240, 229);
-    color: black;
+    background: rgba(212, 197, 240, 0.5);
+    color: #5a4a6a;
 }
 
 .section {
@@ -102,8 +102,8 @@ nav {
     display: inline-block;
     padding: 12px 28px;
     border-radius: 30px;
-    background: rgb(240, 240, 229);
-    color: white;
+    background: white;
+    color: #1e1e1e;
     text-decoration: none;
     font-size: 18px;
     font-weight: 600;
@@ -116,8 +116,10 @@ nav {
 }
 
 .get:hover {
-    background: transparent;
-    color: black;
+    background: linear-gradient(135deg, #c8b5e8 0%, #d4b5f0 50%, #e8c5ff 100%);
+    color: #4a3a5a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(200, 181, 232, 0.3);
 }
 
 .get a {
