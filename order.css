@@ -15,26 +15,6 @@ body {
   background: linear-gradient(90deg, #f4d8ff, #c7a6ff, #6c4aff);
   color: #1f2233;
 }
-
-/* Unified button styling to match wallet (leave truck animation intact) */
-:where(button, .ghost-btn):not(.truck-button) {
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #000000;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
-  box-shadow: none;
-}
-
-:where(button, .ghost-btn):not(.truck-button):hover {
-  background: #f5f5f5;
-  color: #000000;
-}
-
-:where(button, .ghost-btn):not(.truck-button):active {
-  transform: translateY(1px);
-}
-
 .order-page {
   margin: 0;
 }
