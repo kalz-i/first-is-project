@@ -771,3 +771,13 @@ body {
     padding: 15px;
   }
 }
+/*
+.card-input__input, .cardCvv {
+  padding-top: 5px;
+}*/
+
+.cvvBOX {
+  display: flex;
+  flex-direction: column;
+  margin-top: 11px;
+}
